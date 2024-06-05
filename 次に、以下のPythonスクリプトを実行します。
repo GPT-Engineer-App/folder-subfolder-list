@@ -1,0 +1,32 @@
+import os
+import pandas as pd
+import h5py
+
+def convert_pkl_to_h5(directory):
+    # ディレクトリ内のサブフォルダの名前をリスト化
+    subfolders = [f.name for f in os.scandir(directory) if f.is_dir()]
+    
+    for subfolder in subfolders:
+        subfolder_path = os.path.join(directory, subfolder)
+        
+        # サブフォルダ内の.pklファイルをリスト化
+        pkl_files = [f for f in os.listdir(subfolder_path) if f.endswith('.pkl')]
+        
+        for pkl_file in pkl_files:
+            pkl_path = os.path.join(subfolder_path, pkl_file)
+            h5_file_name = os.path.splitext(pkl_file)[0] + '.h5'
+            h5_path = os.path.join(subfolder_path, h5_file_name)
+            
+            # .pklファイルを読み込み
+            df = pd.read_pickle(pkl_path)
+            
+            # .h5ファイルに変換して保存
+            with h5py.File(h5_path, 'w') as h5f:
+                for column in df.columns:
+                    h5f.create_dataset(column, data=df[column].values)
+            
+            print(f"Converted {pkl_path} to {h5_path}")
+
+# 使用例
+directory = 'path_to_your_directory'
+convert_pkl_to_h5(directory)
